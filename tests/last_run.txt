@@ -1,0 +1,45 @@
+== boot
+  PASS  bridge reaches both platform targets over TLS (OPTIONS qualify)
+== 1. normal call: operator A-law in, platform over TLS + SRTP, two-way audio
+  PASS  call completes (INVITE/200/ACK/BYE)
+  PASS  answered by primary (agent-a)
+  PASS  audio carrier -> bridge on the circuit
+  PASS  audio bridge -> carrier on the circuit (agent echo came back)
+  PASS  bridge answer SDP gives the carrier the circuit address
+  PASS  no cleartext SIP on the public side
+  PASS  signalling to the platform is TLS on 5061
+  PASS  platform leg offered SRTP (RTP/SAVP + a=crypto)
+  PASS  no transcoding: platform leg negotiated PCMA too
+  PASS  E.164 number reaches the platform (+966920000000)
+  PASS  caller ID passed as X-Caller-ID header
+       post-dial delay: 0.01s
+== 2. primary platform dies mid-day; qualify has already noticed
+  PASS  qualify marks agent-a Unavail
+  PASS  call completes
+  PASS  answered by secondary (agent-b)
+  PASS  primary skipped without an attempt
+  PASS  two-way audio after failover
+       post-dial delay: 0.01s
+  PASS  failover adds no noticeable delay (< 1s to answer)
+== 3a. primary process dies seconds before the call (TLS connect refused)
+  PASS  call completes
+  PASS  answered by secondary (agent-b)
+  PASS  primary was attempted, failed, dialplan moved on
+       post-dial delay: 0.01s
+  PASS  refused connect: failover bounded by timer B = 6.4s
+== 3b. primary goes silent (blackhole: region outage, dropped route) before qualify notices
+  PASS  call completes
+  PASS  answered by secondary (agent-b)
+       post-dial delay: 6.42s
+  PASS  silent target: failover bounded by timer B = 6.4s (default 32s)
+== 4. both platform targets down: the published number still answers
+  PASS  call is answered locally (200 OK), not rejected
+  PASS  fallback branch taken
+  PASS  caller hears the fallback prompt (bridge -> carrier audio)
+== 5. one-way audio: 'the agent can't hear the caller'
+  PASS  call connects normally (200 OK, clean BYE)
+  PASS  on the wire: carrier -> bridge audio arrives
+  PASS  symptom: nothing forwarded to the agent (it hears silence)
+  PASS  cause: packets dropped before reaching the media engine (201 dropped)
+
+passed: 32   failed: 0

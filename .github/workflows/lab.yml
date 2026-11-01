@@ -1,0 +1,26 @@
+name: bridge-lab
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Asterisk, SIPp, capture tools
+        run: |
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            asterisk asterisk-modules sip-tester tcpdump tshark bc iproute2 iptables openssl
+          sudo systemctl stop asterisk || true
+      - name: Run call scenarios
+        run: sudo bash tests/run_all.sh
+      - name: Keep captures and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: captures
+          path: tests/out/
